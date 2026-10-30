@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anpr-india"
+version = "1.1.0"
+description = "End-to-end Automatic Number Plate Recognition for Indian plates"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "ANPR-India Contributors" }]
+keywords = ["anpr", "license-plate", "india", "yolo", "pose", "parseq"]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+paddle = ["paddleocr>=2.7", "paddlepaddle-gpu"]
+parseq = ["parseq @ git+https://github.com/baudm/parseq.git"]
+
+[project.scripts]
+anpr = "anpr.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["anpr*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",   # pycodestyle + pyflakes
+    "I",              # isort
+    "UP",             # pyupgrade
+    "B",              # bugbear
+    "SIM",            # simplify
+    "RUF",            # ruff-specific
+]
+ignore = ["E501"]   # line length handled by line-length above
+
+[tool.ruff.lint.isort]
+known-first-party = ["anpr"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = [
+    "ultralytics.*",
+    "supervision.*",
+    "paddleocr.*",
+    "onnxruntime.*",
+    "cv2",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "slow: marks tests as slow (deselect with -m 'not slow')",
+    "gpu: marks tests that require a GPU",
+]
+
+[tool.coverage.run]
+source = ["src/anpr"]
+omit = ["*/tests/*", "*/benchmarks/*"]

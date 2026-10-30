@@ -1,0 +1,36 @@
+# ANPR-India runtime dependencies.
+# Kaggle already has: torch, numpy, opencv-python, pyyaml, pandas, pillow
+# Install the rest via: pip install -r requirements.txt
+
+# Detector + tracking
+ultralytics>=8.3.0           # YOLO11 + YOLO26 (when released)
+supervision>=0.20            # ByteTrack
+
+# Inference
+onnxruntime-gpu>=1.18        # TensorRT EP, fp16
+
+# Service
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+python-multipart>=0.0.9
+
+# Config + utils
+pyyaml>=6.0
+pydantic-settings>=2.2
+
+# Optional baselines
+paddleocr>=2.7               # PP-OCRv4 mobile — Wk1-2 baseline recognizer
+# paddlepaddle-gpu            # install separately; version depends on CUDA
+
+# Optional heavy recognizer (PARSeq)
+# Install from git: pip install -e git+https://github.com/baudm/parseq.git#egg=parseq
+
+# Dev tools
+ruff>=0.4
+mypy>=1.10
+pytest>=8.0
+pytest-cov>=5.0
+
+# Experiment tracking
+wandb>=0.16                  # free tier, runs from Kaggle

@@ -1,0 +1,67 @@
+MIT License
+
+Copyright (c) 2026 ANPR-India Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Important license notes for downstream users
+
+This MIT license covers **the source code in this repository only**.
+
+The following third-party components have **different licenses** that you must
+respect separately:
+
+### Pretrained weights (downloaded by scripts/download_weights.py)
+
+| Component | License | Commercial use note |
+|---|---|---|
+| Ultralytics YOLO11 / YOLO26 base | **AGPL-3.0** | For commercial deployment, you MUST either open-source your entire service under AGPL OR purchase an Ultralytics Enterprise license. https://www.ultralytics.com/license |
+| PARSeq base recognizer | MIT | Free for commercial use |
+| Real-ESRGAN realesr-general-x4v3 | Apache-2.0 | Free for commercial use |
+| PaddleOCR PP-OCRv4 mobile | Apache-2.0 | Free for commercial use |
+| ByteTrack / supervision | MIT | Free for commercial use |
+
+### Datasets (referenced in DATA_PROVENANCE.md)
+
+| Dataset | License |
+|---|---|
+| CCPD | Academic use only — cite Xu et al. 2018 |
+| Roboflow Universe sets | Per-dataset, mostly CC-BY-4.0 |
+| UFPR-ALPR | Academic — cite Laroca et al. 2018 |
+| AOLP | Academic |
+
+**The Ultralytics AGPL is the only license trap in the stack.** If you intend
+to deploy ANPR-India commercially, you need an Ultralytics Enterprise license
+to use YOLO11/YOLO26. PARSeq, Real-ESRGAN, and PaddleOCR are all permissive.
+
+### Privacy compliance (India)
+
+License plate strings are personal data under India's Digital Personal Data
+Protection Act 2023 (DPDP Act). For any deployment targeting Indian users:
+
+- Do not store raw plate images beyond the inference call
+- Store plates as salted hashes if you need historical queries
+- Document data subject access rights in your service README
+- Blur faces in any demo / marketing material (ANPR cameras capture more than plates)
+- ANPR is surveillance-adjacent technology — handle with care
+
+This software does not include legal advice. Consult a qualified lawyer for
+DPDP Act compliance before deployment.
