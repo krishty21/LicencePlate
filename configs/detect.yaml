@@ -1,0 +1,78 @@
+# Detector configuration — YOLO26s-pose (v1.1).
+# See REVIEW_AND_RECOMMENDATIONS.md §2.1 for the upgrade rationale.
+
+# Weights — downloaded by scripts/download_weights.py
+# Path is relative to project root or absolute. On Kaggle, point to
+# /kaggle/input/<dataset>/weights/yolo26s-pose-plate.pt
+weights: weights/yolo26s-pose-plate.pt
+
+# v1.0 fallback if YOLO26 weights are not yet trained:
+#   weights: weights/yolo11s-pose-plate.pt
+
+# Inference
+conf_thres: 0.25
+iou_thres: 0.45
+imgsz: 640
+max_det: 10
+device: cuda:0
+
+# v1.1: native end-to-end inference (no NMS pass) — simplifies ONNX export.
+nms: false
+
+# Training (consumed by Kaggle notebook, not by inference path)
+train:
+  # Pretraining data (Stage 1 of detector training):
+  #   1. CCPD subset (~20k images) — universal plate geometry
+  #   2. Roboflow "license-plate-new" v3 (24k images, 4 corner keypoints, CC BY 4.0)
+  #   3. Roboflow "license-plate-4-corner-detection-v2" (2k images)
+  # Fine-tuning (Stage 2):
+  #   Roboflow Indian aggregate (~2k images)
+  pretrain_sources:
+    - name: ccpd_subset
+      path: data/ccpd_subset_20k
+      images_per_epoch: 20000
+    - name: roboflow_license_plate_new_v3
+      path: data/license-plate-new-v3
+      license: CC-BY-4.0
+      images: 24000
+    - name: roboflow_alielsaka_corners
+      path: data/license-plate-4-corner-detection-v2
+      license: open
+      images: 2030
+  finetune_sources:
+    - name: roboflow_indian_aggregate
+      path: data/indian_roboflow_combined
+      license: CC-BY-4.0
+      images: 2000
+
+  # Ultralytics hyperparameters — tuned for plate + keypoint task.
+  epochs: 80
+  batch_size: 32
+  optimizer: MuSGD       # YOLO26 default; falls back to SGD + cosine on YOLO11
+  lr0: 0.01
+  lrf: 0.01              # final LR = lr0 * lrf
+  momentum: 0.937
+  weight_decay: 0.0005
+  warmup_epochs: 3
+  patience: 15
+
+  # Augmentations — perspective warp is critical for keypoint learning.
+  augmentation:
+    mosaic: 1.0
+    hsv_h: 0.015
+    hsv_s: 0.7
+    hsv_v: 0.4
+    degrees: 5.0
+    translate: 0.1
+    scale: 0.5
+    shear: 2.0
+    perspective: 0.0005   # activates keypoint perspective augmentation
+    fliplr: 0.0           # DO NOT flip — plates are directional
+    flipud: 0.0
+    copy_paste: 0.1       # copy-paste of small plates (two-wheelers)
+
+  # Success bars (gated checks before promoting weights to "best")
+  success_bars:
+    map50_min: 0.95
+    map5095_min: 0.75
+    corner_error_max_px: 2.0
