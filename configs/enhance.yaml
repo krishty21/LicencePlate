@@ -1,0 +1,27 @@
+# Enhancement configuration — gated SR.
+# See REVIEW_AND_RECOMMENDATIONS.md §2.4 and ablation A8.
+
+enabled: true
+
+# Default backend — Real-ESRGAN compact variant.
+backend: realesrgan      # realesrgan | clahe | plate_sr | ttpsr
+
+# Real-ESRGAN realesr-general-x4v3 (~16 MB, Apache 2.0)
+weights: weights/realesr-general-x4v3.onnx
+device: cuda
+tile: 256
+fp16: true
+scale: 4
+
+# Ablation A8 — 4-way enhancement comparison.
+# Switch backend in configs and re-run benchmarks/run_all.py A8.
+ablation_backends:
+  - realesrgan
+  - plate_sr         # Nascimento et al. 2023 — plate-specific SR
+  - ttpsr             # Chen et al. 2025 — text-prior SR
+  - clahe             # classical CLAHE + unsharp mask (free baseline)
+
+# Gating — never invoke on the happy path
+gating:
+  tau: 0.75           # if fast.mean_conf >= tau, skip enhancement entirely
+  pick_better_key: [grammar_valid, mean_conf]   # total order
