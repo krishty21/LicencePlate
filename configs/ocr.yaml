@@ -1,0 +1,71 @@
+# Recognizer configuration — v1.1 hybrid: LPRNet (fast) + PARSeq (heavy).
+# See REVIEW_AND_RECOMMENDATIONS.md §2.3.
+
+# Gating threshold — if fast read mean_conf < tau, invoke heavy path.
+tau: 0.75
+
+# Charset — A-Z minus {I, O, Q} + 0-9. Indian RTO convention.
+charset: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"   # 33 chars
+
+# Fast path (always runs)
+fast:
+  kind: lprnet          # lprnet | paddle
+  weights: weights/lprnet_indian_v2.onnx
+  device: cuda
+  # Model: ~2 MB ONNX, ~6 ms inference on T4
+
+# Heavy path (runs only inside gated-enhancement branch, post-ESRGAN)
+heavy:
+  weights: weights/parseq_indian.onnx
+  device: cuda
+  charset: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+  # PARSeq: ~24 MB ONNX, ~15 ms inference. MIT-licensed.
+  # Used only when fast.mean_conf < tau AND ESRGAN has been applied.
+
+# Training recipe for the LPRNet v2 (consumed by Kaggle notebook)
+train_lprnet:
+  # Stage 1: pretrain on synthetic Indian plates (150k strips)
+  pretrain:
+    data: data/synthetic_indian_plates
+    epochs: 10
+    batch_size: 256
+    optimizer: adamw
+    lr: 0.001
+    schedule: cosine
+  # Stage 2: fine-tune on real Indian crops (×5 oversampled hard conditions)
+  finetune:
+    data: data/indian_plate_crops_real
+    epochs: 5
+    batch_size: 64
+    optimizer: adamw
+    lr: 0.0001
+    oversample_hard_conditions: 5   # night/blur/tilted × 5
+  # Augmentations
+  augmentation:
+    perspective_warp_deg: 15
+    motion_blur_kernel_max: 5
+    gamma_range: [0.4, 1.6]
+    jpeg_quality: 40
+    downscale_to_px: 24       # "tiny plate" simulator
+    random_state_code_resample: true
+
+# Training recipe for PARSeq fine-tune (heavy path recognizer)
+train_parseq:
+  base_model: parseq-base   # MIT-licensed pretrained from github.com/baudm/parseq
+  finetune_data: data/indian_plate_crops_real
+  epochs: 8
+  batch_size: 64
+  optimizer: adamw
+  lr: 0.0001
+  # PARSeq's permutation training is preserved — do not disable.
+
+# Plate shapes — class-aware rectification targets (v1.1 §4.4)
+plate_shapes:
+  car: [200, 48]                # LMV: ~50×12 cm, ~4.17:1
+  two_wheeler_rear: [128, 64]   # ~20×10 cm, 2:1
+  two_wheeler_front: [192, 30]  # ~28.5×4.5 cm, 6.33:1
+  truck: [192, 112]             # MCV/HCV: ~34×20 cm, 1.7:1
+  three_wheeler: [128, 64]      # ~20×10 cm, 2:1
+  unknown: [192, 64]            # v1.0 fallback
+
+max_envelope: [200, 112]   # recognizer pads to this shape
